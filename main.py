@@ -51,6 +51,7 @@ def create_chart(data: pd.DataFrame) -> go.Figure:
         legend_title="Indicators",
         hovermode="x unified"
     )
+    fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
     return fig
 
 def create_rsi_chart(data: pd.DataFrame) -> go.Figure:
@@ -65,6 +66,7 @@ def create_rsi_chart(data: pd.DataFrame) -> go.Figure:
         yaxis_title="RSI",
         yaxis=dict(range=[0, 100])
     )
+    fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
     return fig
 
 def main():
@@ -74,8 +76,8 @@ def main():
     # Sidebar for user input
     st.sidebar.header("Input Parameters")
     ticker = st.sidebar.text_input("Enter stock ticker:", value="AAPL").upper()
-    start_date = st.sidebar.date_input("Start date", value=datetime.now() - timedelta(days=365))
-    end_date = st.sidebar.date_input("End date", value=datetime.now())
+    start_date = st.sidebar.date_input("Start date", value=datetime.now() - timedelta(days=365), max_value=datetime.today().date())
+    end_date = st.sidebar.date_input("End date", value=datetime.now(), max_value=datetime.today().date())
 
     if st.sidebar.button("Analyze"):
         logging.info(f"Analyzing stock: {ticker} from {start_date} to {end_date}")
@@ -88,8 +90,12 @@ def main():
 
             # Display stock information
             st.header(f"{ticker} Stock Analysis")
+            closeprice = data["Close"].iloc[-1]
+            prevcloseprice = data["Close"].iloc[-2]
+            change = closeprice - prevcloseprice
+            pctchange = (change / prevcloseprice) * 100
             col1, col2, col3 = st.columns(3)
-            col1.metric("Current Price", f"${data['Close'].iloc[-1]:.2f}")
+            col1.metric("Current Price", f"${data['Close'].iloc[-1]:.2f}",f'{change:.2f}({pctchange:.2f}%)')
             col2.metric("50-day SMA", f"${data['SMA_50'].iloc[-1]:.2f}")
             col3.metric("RSI", f"{data['RSI'].iloc[-1]:.2f}")
 
